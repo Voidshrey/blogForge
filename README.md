@@ -48,5 +48,12 @@
 ### Steps
 1. **Clone the Repository**
    ```bash
-   git clone
+   git clone https://github.com/Iknowimhere/blogForge.git
    cd blogforge
+
+   to start backend server
+   cd backend
+   ```dev
+   npm run dev
+  ```prod
+   npm start
