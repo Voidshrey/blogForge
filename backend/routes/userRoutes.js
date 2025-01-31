@@ -1,5 +1,5 @@
 import express from 'express'
-import { login, register, updateProfile } from '../controller/userController.js';
+import { forgotPassword, login, register, updateProfile } from '../controller/userController.js';
 import multer from 'multer';
 import storage from '../middleware/fileUpload.js';
 import { auth } from '../middleware/auth.js';
@@ -12,6 +12,8 @@ router.post("/register", upload.single("photo"), register);
 router.post("/login", login);
 
 router.patch("/profile/:id",upload.single("photo"),updateProfile);
+
+router.post("/forgot-password",forgotPassword);
 
 
 export default router;
