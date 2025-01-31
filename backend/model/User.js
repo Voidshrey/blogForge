@@ -33,7 +33,9 @@ const userSchema=new Schema({
             },
             message:"Password and Confirm Password do not match"
         }
-    }
+    },
+    resetPasswordToken: String,   // for checking token 
+    resetPasswordTokenExpiresAt: Date
 },{
     timestamps:true
 })
