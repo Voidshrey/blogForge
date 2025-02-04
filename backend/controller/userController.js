@@ -1,85 +1,112 @@
-import User from '../model/User.js';
-import generateToken from '../utils/generateToken.js';
-import expressAsyncHandler from 'express-async-handler';
-import crypto from 'crypto';
-import send from '../utils/send.js'
+import User from "../model/User.js";
+import generateToken from "../utils/generateToken.js";
+import expressAsyncHandler from "express-async-handler";
+import crypto from "crypto";
+import send from "../utils/send.js";
 
+export const register = expressAsyncHandler(async (req, res, next) => {
+  let { username, email, password, confirmPassword } = req.body;
+  console.log(req.file);
 
-
-export const register = expressAsyncHandler(async (req, res, next) => {    
-    let { username, email, password, confirmPassword } = req.body;
-    console.log(req.file);
-    
-        //verify user is in db already
-        let existingUser=await User.findOne({email})
-        if(existingUser){
-           throw new Error("User already exists,Please Login")
-        }
-        //creating a new user
-        let newUser = await User.create({
-            username,
-            email,
-            role: req.body?.role || 'user',
-            password,
-            confirmPassword,
-            photo:req.file?.path
-        })
-        //generate token
-        let token=await generateToken(newUser._id);
-        //sending response
-        res.status(201).json({newUser,token});
+  //verify user is in db already
+  let existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User already exists,Please Login");
+  }
+  //creating a new user
+  let newUser = await User.create({
+    username,
+    email,
+    role: req.body?.role || "user",
+    password,
+    confirmPassword,
+    photo: req.file?.path,
+  });
+  //generate token
+  let token = await generateToken(newUser._id);
+  //sending response
+  res.status(201).json({ newUser, token });
 });
 
 export const login = expressAsyncHandler(async (req, res, next) => {
-    let {  email, password} = req.body;
-        //verify user is in db already
-        let existingUser=await User.findOne({email})
-        if(!existingUser){
-            throw new Error("User doesnt exist,Please Register")
-        }
-        //verify password
-        let result=await existingUser.verifyPassword(password,existingUser.password)
-        if(!result){
-            throw new Error("Password is not correct")
-        }
-        //token
-        let token=await generateToken(existingUser._id)
-        //sending response
-        res.status(201).json({existingUser,token});
+  let { email, password } = req.body;
+  //verify user is in db already
+  let existingUser = await User.findOne({ email });
+  if (!existingUser) {
+    throw new Error("User doesnt exist,Please Register");
+  }
+  //verify password
+  let result = await existingUser.verifyPassword(
+    password,
+    existingUser.password
+  );
+  if (!result) {
+    throw new Error("Password is not correct");
+  }
+  //token
+  let token = await generateToken(existingUser._id);
+  //sending response
+  res.status(201).json({ existingUser, token });
 });
 
+export const updateProfile = expressAsyncHandler(async (req, res, next) => {
+  let { id } = req.params;
+  await User.findByIdAndUpdate(id, { photo: req.file?.path }, { new: true });
+  res.sendStatus(201);
+});
 
-export const updateProfile = expressAsyncHandler( async(req , res , next) =>{
-    let {id} = req.params;
-    await User.findByIdAndUpdate(id , {photo : req.file?.path}, {new : true});
-    res.sendStatus(201);
-})
+export const resetPassword = expressAsyncHandler(async (req, res, next) => {
+  const { token } = req.params;
+  const { password, confirmPassword } = req.body;
 
-export const forgotPassword = expressAsyncHandler( async(req , res , next) =>{
-    let {email} = req.params;
-
-  let exisitingUser = await User.findOne(email);
-  if(!exisitingUser){
- throw new Error("User dosen't exhists");
+  if (token === null || password === null || confirmPassword === null) {
+    throw new Error("resetToken or Password is missing");
   }
 
-  let resetPasswordToken = crypto.randomBytes(32);
+  const exisitingUser = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordTokenExpiresAt: { $gt: Date.now() }
+  });
+
+  if (!exisitingUser) {
+    throw new Error("Invalid or token expiration");
+  }
+
+  existingUser.password = password;
+  existingUser.confirmPassword = confirmPassword;
+  existingUser.resetPasswordToken = undefined;
+  existingUser.resetPasswordTokenExpiresAt = undefined;
+
+  await exisitingUser.save({ validateBeforeSave: false });
+
+  res.status(200).send("password reset successfull");
+});
+
+export const forgotPassword = expressAsyncHandler(async (req, res, next) => {
+  let { email } = req.params;
+
+  let exisitingUser = await User.findOne(email);
+  if (!exisitingUser) {
+    throw new Error("User dosen't exhists");
+  }
+
+  let resetPasswordToken = crypto.randomBytes(16).toString('hex');
   let resetPasswordTokenExpiresAt = new Date() + 60 * 60 * 1000;
 
   exisitingUser.resetPasswordToken = resetPasswordToken;
   exisitingUser.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;
 
-  // we are saving the new values for the exhisting user , but not validating all the values 
+  // we are saving the new values for the exhisting user , but not validating all the values
   // as confirm password is required
 
-  await exisitingUser.save({validateBeforeSave:false});
+  await exisitingUser.save({ validateBeforeSave: false });
 
-  let resetPasswordLink= `${req.protocol}://${req.hostname}:5001/reset-password/:${resetPasswordToken}`
-    let options={
-        subject:"Reset your password",
-        to:exisitingUser.email,
-        text:`This is the reset password link, this expires in 1 hour ${resetPasswordLink} click here to reset the password`,
-        html:`<!DOCTYPE html>
+  let resetPasswordLink = `${req.protocol}://${req.hostname}:5001/api/user/reset-password/${resetPasswordToken}`;
+  let options = {
+    subject: "Reset your password",
+    to: exisitingUser.email,
+    text: `This is the reset password link, this expires in 1 hour ${resetPasswordLink} click here to reset the password`,
+    html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -142,11 +169,8 @@ export const forgotPassword = expressAsyncHandler( async(req , res , next) =>{
     </div>
 </body>
 </html>
-`
-    }
-    await send(options)
-    
-    res.status(200).json("Reset password link sent");
-
-})
-
+`,
+  };
+  await send(options);
+  res.status(200).json("Reset password link sent");
+});
