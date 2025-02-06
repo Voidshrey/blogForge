@@ -56,30 +56,22 @@ export const updateProfile = expressAsyncHandler(async (req, res, next) => {
 });
 
 export const resetPassword = expressAsyncHandler(async (req, res, next) => {
-  const { token } = req.params;
-  const { password, confirmPassword } = req.body;
+  // let {token}=req.params;
+  // let {password,confirmPassword}=req.body;
 
-  if (token === null || password === null || confirmPassword === null) {
-    throw new Error("resetToken or Password is missing");
-  }
-
-  const exisitingUser = await User.findOne({
-    resetPasswordToken: token,
-    resetPasswordTokenExpiresAt: { $gt: Date.now() }
-  });
-
-  if (!exisitingUser) {
-    throw new Error("Invalid or token expiration");
-  }
-
-  existingUser.password = password;
-  existingUser.confirmPassword = confirmPassword;
-  existingUser.resetPasswordToken = undefined;
-  existingUser.resetPasswordTokenExpiresAt = undefined;
-
-  await exisitingUser.save({ validateBeforeSave: false });
-
-  res.status(200).send("password reset successfull");
+  // let user=await User.findOne({
+  //     resetPasswordToken:token,
+  //     resetPasswordTokenExpiresAt:{$gt:Date.now()}
+  // })
+  // if(!user){
+  //     throw new Error("Token expired")
+  // }
+  // user.password=password;
+  // user.confirmPassword=confirmPassword;
+  // user.resetPasswordToken=undefined;
+  // user.resetPasswordTokenExpiresAt=undefined;
+  // await user.save({validateBeforeSave:false})
+  // res.status(200).send("Password reset successfully!!")
 });
 
 export const forgotPassword = expressAsyncHandler(async (req, res, next) => {
@@ -90,8 +82,8 @@ export const forgotPassword = expressAsyncHandler(async (req, res, next) => {
     throw new Error("User dosen't exhists");
   }
 
-  let resetPasswordToken = crypto.randomBytes(16).toString('hex');
-  let resetPasswordTokenExpiresAt = new Date() + 60 * 60 * 1000;
+  let resetPasswordToken = crypto.randomBytes(16).toString("hex");
+  let resetPasswordTokenExpiresAt = Date.now() + 60 * 60 * 1000;
 
   exisitingUser.resetPasswordToken = resetPasswordToken;
   exisitingUser.resetPasswordTokenExpiresAt = resetPasswordTokenExpiresAt;

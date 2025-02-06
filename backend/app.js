@@ -1,6 +1,7 @@
 import express from 'express';
 import db from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 
 db();
@@ -12,6 +13,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}));
 
 app.use("/api/user",userRoutes);
+app.use("/api/blog",blogRoutes);
 
 //global error handler
 app.use((err,req,res,next)=>{
