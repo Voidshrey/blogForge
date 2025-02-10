@@ -5,10 +5,16 @@ import asyncHandler from "express-async-handler";
 //@route    /api/blog
 //@access   Private
 export const postBlog = asyncHandler(async (req, res, next) => {
-  let { title, content } = req.body;
+  let { title, content , categories } = req.body;
+
+  if(!title || !content || !categories){
+   throw new Error("title or content or categories is missing..!")
+  }
   let newBlog = await Blog.create({
     title,
     content,
+    categories,
+    author: req?.userId,
     featuredImage: req.file?.path,
   });
   res.status(201).json(newBlog);

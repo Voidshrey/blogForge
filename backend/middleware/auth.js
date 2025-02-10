@@ -4,11 +4,11 @@ import asyncHandler from "express-async-handler";
 
 export const auth = asyncHandler(async (req, res, next) => {
   let authorization = req.headers.authorization;
-  if (!authHeaders) {
+  if (!authorization) {
     res.status(401);
     throw new Error("Please Login!");
   }
-  let token = authHeaders.split(" ")[1];
+  let token = authorization.split(" ")[1];
   let decodedToken = jwt.verify(token, process.env.JWT_SECRET);
   let user = await User.findById(decodedToken.id);
   if (!user) {
