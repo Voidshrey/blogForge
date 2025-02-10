@@ -16,6 +16,8 @@ const userSchema = new Schema(
       type: String,
       enum: ["user", "admin", "author"],
       default: "user",
+      // false means this propertie will not be returned after save
+      select: false,
     },
     photo: {
       type: String,
@@ -25,6 +27,7 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     confirmPassword: {
       type: String,

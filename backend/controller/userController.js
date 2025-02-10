@@ -30,7 +30,7 @@ export const register = expressAsyncHandler(async (req, res, next) => {
 export const login = expressAsyncHandler(async (req, res, next) => {
   let { email, password } = req.body;
   //verify user is in db already
-  let existingUser = await User.findOne({ email });
+  let existingUser = await User.findOne({ email }).select("+password");
   if (!existingUser) {
     throw new Error("User doesnt exist,Please Register");
   }
@@ -45,7 +45,8 @@ export const login = expressAsyncHandler(async (req, res, next) => {
   //token
   let token = await generateToken(existingUser._id);
   //sending response
-  res.status(201).json({ existingUser, token });
+  res.status(201).json({username:existingUser.username,photo:existingUser.photo,email:existingUser.email,token});
+
 });
 
 export const updateProfile = expressAsyncHandler(async (req, res, next) => {

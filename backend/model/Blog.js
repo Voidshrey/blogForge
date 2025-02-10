@@ -65,7 +65,7 @@ const blogSchema = new Schema(
     },
 
     likes: {
-      type: [{ type: Schema.Types.ObjectId, ref: "Like" }],
+      type: [{ type: Schema.Types.ObjectId, ref: "User" }],
     },
     featuredImage: {
       type: String,
