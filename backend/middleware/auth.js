@@ -3,8 +3,13 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 
 export const auth = asyncHandler(async (req, res, next) => {
-  let token = req.headers.token?.split(" ")[1];
-  let decodedToken = await jwt.verify(token, process.env.JWT_SECRET);
+  let authorization = req.headers.authorization;
+  if (!authHeaders) {
+    res.status(401);
+    throw new Error("Please Login!");
+  }
+  let token = authHeaders.split(" ")[1];
+  let decodedToken = jwt.verify(token, process.env.JWT_SECRET);
   let user = await User.findById(decodedToken.id);
   if (!user) {
     throw new Error("User doesn't exist");

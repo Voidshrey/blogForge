@@ -6,7 +6,6 @@ import send from "../utils/send.js";
 
 export const register = expressAsyncHandler(async (req, res, next) => {
   let { username, email, password, confirmPassword } = req.body;
-  console.log(req.file);
 
   //verify user is in db already
   let existingUser = await User.findOne({ email });
